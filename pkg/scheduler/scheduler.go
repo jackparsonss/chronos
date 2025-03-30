@@ -14,11 +14,7 @@ func NewScheduler() Scheduler {
 	}
 }
 
-type TaskOpts struct {
-	Priority   int
-	MaxRetries int
-	Job        task.Job
-}
+type TaskOpts task.TaskOptions
 
 func (s *Scheduler) ScheduleTask(opts TaskOpts) {
 	s.Tasks.AddTask(task.TaskOptions{

@@ -13,10 +13,8 @@ func main() {
 	s.ScheduleTask(scheduler.TaskOpts{
 		MaxRetries: 3,
 		Priority:   1,
-		Job: task.NewJob(func(x, y int) error {
+		Job: task.NewJob(func(x, y int) {
 			fmt.Println(x + y)
-
-			return nil
 		}, 10, 20),
 	})
 
