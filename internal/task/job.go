@@ -1,13 +1,16 @@
 package task
 
-type JobFunc func(...any) error
+import (
+	"fmt"
+	"reflect"
+)
 
 type Job struct {
-	job  JobFunc
+	job  any
 	args []any
 }
 
-func NewJob(job JobFunc, args ...any) Job {
+func NewJob(job any, args ...any) Job {
 	arguments := make([]any, len(args))
 	copy(arguments, args)
 
@@ -18,5 +21,22 @@ func NewJob(job JobFunc, args ...any) Job {
 }
 
 func (j *Job) Execute() error {
-	return j.job(j.args...)
+	jobValue := reflect.ValueOf(j.job)
+	if jobValue.Kind() != reflect.Func {
+		return fmt.Errorf("job must be a function")
+	}
+
+	var in []reflect.Value
+	for _, arg := range j.args {
+		in = append(in, reflect.ValueOf(arg))
+	}
+
+	// check if any error is returned, used to determine if task should be retried
+	results := jobValue.Call(in)
+	if len(results) > 0 && results[0].CanInterface() {
+		if err, ok := results[0].Interface().(error); ok {
+			return err
+		}
+	}
+	return nil
 }

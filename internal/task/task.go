@@ -2,6 +2,7 @@ package task
 
 import (
 	"container/heap"
+	"errors"
 
 	"github.com/google/uuid"
 )
@@ -21,6 +22,20 @@ func NewTaskQueue() TaskQueue {
 	heap.Init(&tq)
 
 	return tq
+}
+
+func (tq *TaskQueue) AddTask(opts TaskOptions) {
+	t := NewTask(opts)
+	heap.Push(tq, &t)
+}
+
+func PopTask(tq *TaskQueue) (*Task, error) {
+	task, ok := heap.Pop(tq).(*Task)
+	if !ok {
+		return nil, errors.New("failed to pop task from queue")
+	}
+
+	return task, nil
 }
 
 func (tq TaskQueue) Len() int {
