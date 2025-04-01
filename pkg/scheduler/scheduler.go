@@ -21,6 +21,8 @@ func (s *Scheduler) ScheduleTask(opts TaskOpts) {
 		Priority:   opts.Priority,
 		MaxRetries: opts.MaxRetries,
 		Job:        opts.Job,
+		Delay:      opts.Delay,
+		RunAt:      opts.RunAt,
 	})
 }
 

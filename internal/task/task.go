@@ -82,6 +82,8 @@ func NewTask(opts TaskOptions) Task {
 		MaxRetries: opts.MaxRetries,
 		Priority:   opts.Priority,
 		Job:        opts.Job,
+		Delay:      opts.Delay,
+		RunAt:      opts.RunAt,
 	}
 }
 
@@ -99,13 +101,11 @@ func (t *Task) runJob() error {
 
 func (t *Task) GetDelay() time.Duration {
 	delay := time.Duration(0)
-	if t.Delay <= 0 {
-		delay = 0
+	if t.Delay > 0 {
+		delay = t.Delay
 	}
 
-	if t.RunAt.IsZero() {
-		delay = 0
-	} else {
+	if !t.RunAt.IsZero() {
 		delay = time.Until(t.RunAt)
 	}
 
@@ -114,7 +114,6 @@ func (t *Task) GetDelay() time.Duration {
 
 func (t *Task) Execute() error {
 	delay := t.GetDelay()
-
 	if delay > 0 {
 		var err error
 		time.AfterFunc(delay, func() {
