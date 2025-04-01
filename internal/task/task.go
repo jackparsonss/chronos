@@ -3,6 +3,7 @@ package task
 import (
 	"container/heap"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -12,6 +13,8 @@ type Task struct {
 	MaxRetries int
 	Priority   int
 	Job        Job
+	Delay      time.Duration
+	RunAt      time.Time
 	index      int // internal to heap implementation
 }
 
@@ -68,6 +71,8 @@ func (tq *TaskQueue) Pop() any {
 type TaskOptions struct {
 	Priority   int
 	MaxRetries int
+	Delay      time.Duration
+	RunAt      time.Time
 	Job        Job
 }
 
@@ -80,7 +85,7 @@ func NewTask(opts TaskOptions) Task {
 	}
 }
 
-func (t *Task) Execute() error {
+func (t *Task) runJob() error {
 	var err error
 	for range t.MaxRetries + 1 {
 		err := t.Job.Execute()
@@ -90,4 +95,34 @@ func (t *Task) Execute() error {
 	}
 
 	return err
+}
+
+func (t *Task) GetDelay() time.Duration {
+	delay := time.Duration(0)
+	if t.Delay <= 0 {
+		delay = 0
+	}
+
+	if t.RunAt.IsZero() {
+		delay = 0
+	} else {
+		delay = time.Until(t.RunAt)
+	}
+
+	return delay
+}
+
+func (t *Task) Execute() error {
+	delay := t.GetDelay()
+
+	if delay > 0 {
+		var err error
+		time.AfterFunc(delay, func() {
+			err = t.runJob()
+		})
+
+		return err
+	}
+
+	return t.runJob()
 }
